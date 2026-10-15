@@ -1,0 +1,30 @@
+# Dependencias
+node_modules/
+vendor/
+
+# Entorno y secretos
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Builds
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Volúmenes y datos de Docker
+.docker-data/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
