@@ -1,0 +1,10 @@
+# docker-compose.override.yml
+# Ajustes SOLO de desarrollo. Compose lo fusiona con docker-compose.yml.
+
+services:
+  php:
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+    volumes:
+      - ./docker/php/dev.ini:/usr/local/etc/php/conf.d/zz-dev.ini:ro
