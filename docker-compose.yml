@@ -1,0 +1,40 @@
+# Estado DESEADO del stack. Se versiona en git.
+
+services:
+
+  # --- Servidor web: única puerta de entrada desde el host ---
+  nginx:
+    image: nginx:alpine            # imagen ya construida, no se compila nada
+    ports:
+      - "8080:80"                  # host:contenedor. Solo este servicio publica puertos
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/public:/var/www/frontend:ro
+      - ./backend/public:/var/www/backend/public:ro
+    networks:
+      - cancionero_net
+    depends_on:
+      php:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --- Intérprete PHP: ejecuta el backend. No publica puertos ---
+  php:
+    build:
+      context: ./backend           # construye desde backend/Dockerfile
+    volumes:
+      - ./backend:/var/www/backend # bind mount: el código en vivo, sin reconstruir
+    networks:
+      - cancionero_net
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 9000 || exit 1"]
+      interval: 5s        # cada cuánto se prueba
+      timeout: 2s         # cuánto espera antes de dar la prueba por fallida
+      retries: 5          # fallos consecutivos antes de marcarlo 'unhealthy'
+      start_period: 5s    # margen de gracia inicial, sin contar fallos
+    restart: unless-stopped
+
+# Red propia del proyecto: DNS interno por nombre de servicio + aislamiento
+networks:
+  cancionero_net:
+    driver: bridge
