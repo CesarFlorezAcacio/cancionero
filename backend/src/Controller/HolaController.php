@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Http\Json;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
 final class HolaController
 {
-    /** @return array<string, mixed> */
-    public function hola(): array
+    public function hola(ServerRequestInterface $peticion): ResponseInterface
     {
-        return [
+        return Json::respuesta(200, [
             'ok'      => true,
             'mensaje' => 'Hola desde PHP-FPM',
-            'ruta'    => '/api/hola',
+            'ruta'    => $peticion->getUri()->getPath(),
             'hora'    => (new \DateTimeImmutable())->format(DATE_ATOM),
-        ];
+        ]);
     }
 }
