@@ -4,41 +4,73 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Controller\CancionController;
+use App\Controller\EcoController;
 use App\Controller\HolaController;
+use App\Http\Json;
+use App\Http\Router;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Núcleo mínimo. Hoy solo demuestra dos cosas:
- *   1. que Composer carga clases de namespaces distintos sin `require`
- *   2. que el front controller es el único punto de entrada
- *
- * Día 5: este `match` se sustituye por un Router de verdad.
+ * Núcleo. Ya no lee superglobales ni imprime:
+ * recibe un objeto PSR-7 y devuelve un objeto PSR-7.
  */
 final class Kernel
 {
-    public function run(): void
+    private Router $router;
+
+    public function __construct()
     {
-        $ruta = $this->rutaActual();
-
-        [$codigo, $cuerpo] = match ($ruta) {
-            '/api/hola' => [200, (new HolaController())->hola()],
-            default     => [404, $this->noEncontrada($ruta)],
-        };
-
-        Json::responder($codigo, $cuerpo);
+        $this->router = new Router();
+        $this->registrarRutas();
     }
 
-    private function rutaActual(): string
+    public function handle(ServerRequestInterface $peticion): ResponseInterface
     {
-        return parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-    }
+        $metodo = $peticion->getMethod();
+        $ruta   = $peticion->getUri()->getPath();
 
-    /** @return array<string, mixed> */
-    private function noEncontrada(string $ruta): array
-    {
-        return [
+        $encontrada = $this->router->resolver($metodo, $ruta);
+
+        if ($encontrada !== null) {
+            $manejador = $encontrada['manejador'];
+
+            return $manejador($peticion, $encontrada['parametros']);
+        }
+
+        $permitidos = $this->router->metodosPermitidos($ruta);
+
+        if ($permitidos !== []) {
+            return Json::respuesta(405, ['ok' => false, 'error' => 'Método no permitido'])
+                ->withHeader('Allow', implode(', ', $permitidos));
+        }
+
+        return Json::respuesta(404, [
             'ok'    => false,
             'error' => 'Ruta no encontrada',
             'ruta'  => $ruta,
-        ];
+        ]);
+    }
+
+    private function registrarRutas(): void
+    {
+        $this->router->get(
+            '/api/hola',
+            static fn (ServerRequestInterface $p, array $args): ResponseInterface
+                => (new HolaController())->hola($p),
+        );
+
+        $this->router->get(
+            '/api/canciones/{id}',
+            static fn (ServerRequestInterface $p, array $args): ResponseInterface
+                => (new CancionController())->ver($p, $args['id']),
+        );
+
+        $this->router->post(
+            '/api/eco',
+            static fn (ServerRequestInterface $p, array $args): ResponseInterface
+                => (new EcoController())->eco($p),
+        );
     }
 }
