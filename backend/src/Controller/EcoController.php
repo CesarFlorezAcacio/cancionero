@@ -10,7 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class EcoController
 {
-    public function eco(ServerRequestInterface $peticion): ResponseInterface
+    public function eco(ServerRequestInterface $peticion, array $args): ResponseInterface
     {
         return Json::respuesta(200, [
             'ok'          => true,
