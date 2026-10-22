@@ -2,17 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Core\Aplicacion;
+use App\Http\Emisor;
+
+// El API responde JSON: PHP nunca imprime por su cuenta.
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+ob_start(); // captura salida prematura para poder limpiarla ante un fatal
+
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Core\Kernel;
-use App\Http\Emisor;
-use Nyholm\Psr7\Factory\Psr17Factory;
-use Nyholm\Psr7Server\ServerRequestCreator;
-
-// EL BORDE: el mundo exterior se lee UNA vez y se convierte en objeto.
-$psr17 = new Psr17Factory();
-
-$peticion = (new ServerRequestCreator($psr17, $psr17, $psr17, $psr17))->fromGlobals();
-
-// Dentro, solo objetos. Y al salir, se vuelca al exterior.
-Emisor::enviar((new Kernel())->handle($peticion));
+Emisor::enviar(Aplicacion::crear()->procesarDesdeGlobals());

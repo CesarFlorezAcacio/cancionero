@@ -4,26 +4,23 @@ declare(strict_types=1);
 
 namespace App\Core;
 
-use App\Controller\CancionController;
-use App\Controller\EcoController;
-use App\Controller\HolaController;
 use App\Http\Json;
 use App\Http\Router;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Núcleo. Ya no lee superglobales ni imprime:
- * recibe un objeto PSR-7 y devuelve un objeto PSR-7.
+ * Manejador más interno: enruta y despacha al controlador.
+ * Ya no hace `new`: el contenedor construye el controlador y sus dependencias.
  */
-final class Kernel
+final class Kernel implements RequestHandlerInterface
 {
-    private Router $router;
-
-    public function __construct()
-    {
-        $this->router = new Router();
-        $this->registrarRutas();
+    public function __construct(
+        private ContainerInterface $contenedor,
+        private Router $router,
+    ) {
     }
 
     public function handle(ServerRequestInterface $peticion): ResponseInterface
@@ -34,9 +31,9 @@ final class Kernel
         $encontrada = $this->router->resolver($metodo, $ruta);
 
         if ($encontrada !== null) {
-            $manejador = $encontrada['manejador'];
+            $controlador = $this->contenedor->get($encontrada['controlador']);
 
-            return $manejador($peticion, $encontrada['parametros']);
+            return $controlador->{$encontrada['accion']}($peticion, $encontrada['parametros']);
         }
 
         $permitidos = $this->router->metodosPermitidos($ruta);
@@ -51,26 +48,5 @@ final class Kernel
             'error' => 'Ruta no encontrada',
             'ruta'  => $ruta,
         ]);
-    }
-
-    private function registrarRutas(): void
-    {
-        $this->router->get(
-            '/api/hola',
-            static fn (ServerRequestInterface $p, array $args): ResponseInterface
-                => (new HolaController())->hola($p),
-        );
-
-        $this->router->get(
-            '/api/canciones/{id}',
-            static fn (ServerRequestInterface $p, array $args): ResponseInterface
-                => (new CancionController())->ver($p, $args['id']),
-        );
-
-        $this->router->post(
-            '/api/eco',
-            static fn (ServerRequestInterface $p, array $args): ResponseInterface
-                => (new EcoController())->eco($p),
-        );
     }
 }

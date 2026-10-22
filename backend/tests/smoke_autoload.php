@@ -6,7 +6,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $clases = [
     'App\Core\Kernel',
-    'App\Core\Json',
+    'App\Http\Json',
     'App\Controller\HolaController',
     'Psr\Http\Message\ResponseInterface',
     'Symfony\Component\VarDumper\VarDumper',
