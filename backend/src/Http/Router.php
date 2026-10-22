@@ -12,26 +12,32 @@ namespace App\Http;
  */
 final class Router
 {
-    /** @var list<array{metodo: string, patron: string, regex: string, manejador: callable}> */
+    /** @var list<array{metodo: string, patron: string, regex: string, controlador: class-string, accion: string}> */
     private array $rutas = [];
 
-    public function get(string $patron, callable $manejador): void
+    /** @param array{class-string, string} $manejador */
+    public function get(string $patron, array $manejador): void
     {
         $this->agregar('GET', $patron, $manejador);
     }
 
-    public function post(string $patron, callable $manejador): void
+    /** @param array{class-string, string} $manejador */
+    public function post(string $patron, array $manejador): void
     {
         $this->agregar('POST', $patron, $manejador);
     }
 
-    private function agregar(string $metodo, string $patron, callable $manejador): void
+    /** @param array{class-string, string} $manejador */
+    private function agregar(string $metodo, string $patron, array $manejador): void
     {
+        [$controlador, $accion] = $manejador;
+
         $this->rutas[] = [
-            'metodo'    => $metodo,
-            'patron'    => $patron,
-            'regex'     => $this->compilar($patron),
-            'manejador' => $manejador,
+            'metodo'      => $metodo,
+            'patron'      => $patron,
+            'regex'       => $this->compilar($patron),
+            'controlador' => $controlador,
+            'accion'      => $accion,
         ];
     }
 
@@ -59,32 +65,6 @@ final class Router
         return '#^' . $regex . '$#D';
     }
 
-    /**
-     * @return array{manejador: callable, parametros: array<string, string>}|null
-     */
-    public function resolver(string $metodo, string $ruta): ?array
-    {
-        foreach ($this->rutas as $definida) {
-            if (preg_match($definida['regex'], $ruta, $coincidencias) !== 1) {
-                continue;
-            }
-            if ($definida['metodo'] !== $metodo) {
-                continue;
-            }
-
-            // Solo los grupos con nombre: descarta las claves numéricas.
-            $parametros = array_filter(
-                $coincidencias,
-                static fn (string|int $clave): bool => is_string($clave),
-                ARRAY_FILTER_USE_KEY,
-            );
-
-            return ['manejador' => $definida['manejador'], 'parametros' => $parametros];
-        }
-
-        return null;
-    }
-
     /** Rutas que hacen match ignorando el método. Para el 405 + Allow. */
     /** @return list<string> */
     public function metodosPermitidos(string $ruta): array
@@ -97,5 +77,32 @@ final class Router
         }
 
         return array_values(array_unique($metodos));
+    }
+
+    /** @return array{controlador: class-string, accion: string, parametros: array<string, string>}|null */
+    public function resolver(string $metodo, string $ruta): ?array
+    {
+        foreach ($this->rutas as $definida) {
+            if (preg_match($definida['regex'], $ruta, $coincidencias) !== 1) {
+                continue;
+            }
+            if ($definida['metodo'] !== $metodo) {
+                continue;
+            }
+
+            $parametros = array_filter(
+                $coincidencias,
+                static fn (string|int $clave): bool => is_string($clave),
+                ARRAY_FILTER_USE_KEY,
+            );
+
+            return [
+                'controlador' => $definida['controlador'],
+                'accion'      => $definida['accion'],
+                'parametros'  => $parametros,
+            ];
+        }
+
+        return null;
     }
 }
