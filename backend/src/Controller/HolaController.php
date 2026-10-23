@@ -10,7 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class HolaController
 {
-    public function hola(ServerRequestInterface $peticion): ResponseInterface
+    public function hola(ServerRequestInterface $peticion, array $args): ResponseInterface
     {
         return Json::respuesta(200, [
             'ok'      => true,

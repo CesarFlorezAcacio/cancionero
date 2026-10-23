@@ -5,6 +5,6 @@ services:
   php:
     environment:
       APP_ENV: dev
-      APP_DEBUG: "1"
+      APP_DEBUG: true
     volumes:
       - ./docker/php/dev.ini:/usr/local/etc/php/conf.d/zz-dev.ini:ro
