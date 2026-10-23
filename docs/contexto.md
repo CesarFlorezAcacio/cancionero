@@ -317,6 +317,7 @@ conecta un reverse proxy a la red pública y a la privada a la vez.
 - Regla de red: la red es la unidad de aislamiento; la IP solo existe dentro de
   su red; el DNS por nombre solo existe en redes definidas por el usuario.
 - Gotcha del volumen: la copia automática ocurre una vez y nunca se actualiza.
+- Una rama no se borra hasta que su PR está mergeado.
 
 ---
 

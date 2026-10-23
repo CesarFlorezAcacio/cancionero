@@ -14,10 +14,11 @@ function comprobar(string $nombre, mixed $obtenido, mixed $esperado): void
 {
     global $fallos;
     $ok = $obtenido === $esperado;
-    printf("%s  %s\n", $ok ? 'OK   ' : 'FALLA', $nombre);
+    printf("%s\t%s\n", $ok ? 'OK' : 'FALLA', $nombre);
     if (!$ok) {
-        printf("       esperado: %s | obtenido: %s\n", var_export($esperado, true), var_export($obtenido, true));
+        printf("\tesperado: %s | obtenido: %s\n", var_export($esperado, true), var_export($obtenido, true));
         $fallos++;
+        echo "$fallos\n";
     }
 }
 
@@ -36,7 +37,8 @@ $app = Aplicacion::crear();
 
 $casos = [
     ['GET',  '/api/hola',          200],
-    ['GET',  '/api/canciones/7',   200],
+    ['GET',  '/api/canciones/1',   200],
+    ['GET',  '/api/canciones/999', 404],   // antes era /7 -> 200
     ['GET',  '/api/canciones/7/x', 404],
     ['POST', '/api/hola',          405],
     ['GET',  '/api/nope',          404],
@@ -51,8 +53,8 @@ foreach ($casos as [$metodo, $ruta, $esperado]) {
 $respuesta = $app->procesar(new ServerRequest('POST', '/api/hola'));
 comprobar('405 trae Allow: GET', $respuesta->getHeaderLine('Allow'), 'GET');
 
-$respuesta = $app->procesar(new ServerRequest('GET', '/api/canciones/42'));
-comprobar('parametro id capturado', json_decode((string) $respuesta->getBody(), true)['id'], '42');
+$respuesta = $app->procesar(new ServerRequest('GET', '/api/canciones/2'));
+comprobar('parametro id capturado', json_decode((string) $respuesta->getBody(), true)['cancion']['id'], '2');
 
 // Middleware CORS
 $respuesta = $app->procesar(new ServerRequest('GET', '/api/hola'));

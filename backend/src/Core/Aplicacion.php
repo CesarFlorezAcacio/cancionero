@@ -11,6 +11,8 @@ use App\Controller\HolaController;
 use App\Http\Middleware\Cors;
 use App\Http\Middleware\ManejadorExcepciones;
 use App\Http\{Tuberia, Router};
+use App\Repository\CancionRepository;
+use App\Repository\CancionRepositoryEnMemoria;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use Psr\Http\Message\ResponseInterface;
@@ -38,15 +40,21 @@ final class Aplicacion
             ManejadorExcepciones::class,
             static fn (): ManejadorExcepciones => new ManejadorExcepciones(getenv('APP_DEBUG') === 'true'),
         );
+        // Interfaz no instanciable -> definición explícita obligatoria.
+        $contenedor->set(
+            CancionRepository::class,
+            static fn (): CancionRepository => new CancionRepositoryEnMemoria(),
+        );
 
         $router = new Router();
         $router->get('/api/hola', [HolaController::class, 'hola']);
+        $router->get('/api/canciones', [CancionController::class, 'listar']);
         $router->get('/api/canciones/{id}', [CancionController::class, 'ver']);
         $router->post('/api/eco', [EcoController::class, 'eco']);
         $router->get('/api/boom', [FalloController::class, 'boom']);
         $router->get('/api/aviso', [FalloController::class, 'aviso']);
         $router->get('/api/fatal', [FalloController::class, 'fatal']);
-
+        
         $nucleo = new Kernel($contenedor, $router);
 
         $tuberia = new Tuberia($nucleo);

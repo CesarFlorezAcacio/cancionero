@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Http\Json;
+use App\Excepcion\ErrorHttp;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -21,6 +22,12 @@ final class ManejadorExcepciones implements MiddlewareInterface
     {
         try {
             return $manejador->handle($peticion);
+        } catch (ErrorHttp $excepcion) {
+            // Error de dominio: él decide el status (404, 409...). No es un 500.
+            return Json::respuesta($excepcion->estado(), [
+                'ok'    => false,
+                'error' => $excepcion->getMessage(),
+            ]);
         } catch (Throwable $excepcion) {
             $datos = ['ok' => false, 'error' => 'Error interno'];
 
