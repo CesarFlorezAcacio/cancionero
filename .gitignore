@@ -16,8 +16,11 @@ build/
 *.log
 npm-debug.log*
 
-# Volúmenes y datos de Docker
+# Volúmenes y dat
+
+backend/config/firebase.jsonos de Docker
 .docker-data/
+backend/config/firebase.json
 
 # Sistema operativo
 .DS_Store

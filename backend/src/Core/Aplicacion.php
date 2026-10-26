@@ -13,6 +13,9 @@ use App\Http\Middleware\ManejadorExcepciones;
 use App\Http\{Tuberia, Router};
 use App\Repository\CancionRepository;
 use App\Repository\CancionRepositoryEnMemoria;
+use App\Repository\CancionRepositoryFirestore;
+use App\Repository\ConexionFirestore;
+use Google\Cloud\Firestore\FirestoreClient;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use Psr\Http\Message\ResponseInterface;
@@ -44,6 +47,14 @@ final class Aplicacion
         $contenedor->set(
             CancionRepository::class,
             static fn (): CancionRepository => new CancionRepositoryEnMemoria(),
+        );
+        $contenedor->set(FirestoreClient::class, static fn (): FirestoreClient => ConexionFirestore::crear());
+        // La única línea que cambia de fuente. Ni el servicio ni el controlador se enteran.
+        $contenedor->set(
+            CancionRepository::class,
+            static fn (Contenedor $c): CancionRepository => getenv('REPO') === 'firestore'
+                ? new CancionRepositoryFirestore($c->get(FirestoreClient::class))
+                : new CancionRepositoryEnMemoria(),
         );
 
         $router = new Router();
