@@ -27,7 +27,7 @@ final class ManejadorExcepciones implements MiddlewareInterface
             return Json::respuesta($excepcion->estado(), [
                 'ok'    => false,
                 'error' => $excepcion->getMessage(),
-            ]);
+            ] + $excepcion->datos());
         } catch (Throwable $excepcion) {
             $datos = ['ok' => false, 'error' => 'Error interno'];
 

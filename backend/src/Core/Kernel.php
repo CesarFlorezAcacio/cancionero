@@ -19,7 +19,7 @@ final class Kernel implements RequestHandlerInterface
 {
     public function __construct(
         private ContainerInterface $contenedor,
-        private Router $router,
+        private Router $router
     ) {
     }
 

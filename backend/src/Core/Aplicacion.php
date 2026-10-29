@@ -9,6 +9,8 @@ use App\Controller\EcoController;
 use App\Controller\FalloController;
 use App\Controller\HolaController;
 use App\Http\Middleware\Cors;
+use App\Http\Middleware\ExigeJson;
+use App\Http\Middleware\ManejadorErrores;
 use App\Http\Middleware\ManejadorExcepciones;
 use App\Http\{Tuberia, Router};
 use App\Repository\CancionRepository;
@@ -35,18 +37,12 @@ final class Aplicacion
 
     public static function crear(): self
     {
-        ManejadorErrores::registrar();
 
         $contenedor = new Contenedor();
         $contenedor->set(Psr17Factory::class, static fn (): Psr17Factory => new Psr17Factory());
         $contenedor->set(
             ManejadorExcepciones::class,
             static fn (): ManejadorExcepciones => new ManejadorExcepciones(getenv('APP_DEBUG') === 'true'),
-        );
-        // Interfaz no instanciable -> definición explícita obligatoria.
-        $contenedor->set(
-            CancionRepository::class,
-            static fn (): CancionRepository => new CancionRepositoryEnMemoria(),
         );
         $contenedor->set(FirestoreClient::class, static fn (): FirestoreClient => ConexionFirestore::crear());
         // La única línea que cambia de fuente. Ni el servicio ni el controlador se enteran.
@@ -61,6 +57,9 @@ final class Aplicacion
         $router->get('/api/hola', [HolaController::class, 'hola']);
         $router->get('/api/canciones', [CancionController::class, 'listar']);
         $router->get('/api/canciones/{id}', [CancionController::class, 'ver']);
+        $router->post('/api/canciones', [CancionController::class, 'crear']);
+        $router->put('/api/canciones/{id}', [CancionController::class, 'actualizar']);
+        $router->delete('/api/canciones/{id}', [CancionController::class, 'eliminar']);
         $router->post('/api/eco', [EcoController::class, 'eco']);
         $router->get('/api/boom', [FalloController::class, 'boom']);
         $router->get('/api/aviso', [FalloController::class, 'aviso']);
@@ -72,13 +71,20 @@ final class Aplicacion
         // Orden = diseño: CORS MÁS EXTERNO, así los errores también llevan cabeceras.
         $tuberia->agregar($contenedor->get(Cors::class));
         $tuberia->agregar($contenedor->get(ManejadorExcepciones::class));
+        $tuberia->agregar(new ExigeJson());
 
         return new self($contenedor, $tuberia);
     }
 
     public function procesar(ServerRequestInterface $peticion): ResponseInterface
     {
-        return $this->tuberia->procesar($peticion);
+        ManejadorErrores::registrar();
+
+        try {
+            return $this->tuberia->procesar($peticion);
+        } finally {
+            ManejadorErrores::restaurar();
+        }
     }
 
     public function procesarDesdeGlobals(): ResponseInterface
