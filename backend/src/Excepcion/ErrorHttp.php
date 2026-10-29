@@ -10,4 +10,5 @@ use Throwable;
 interface ErrorHttp extends Throwable
 {
     public function estado(): int;
+    public function datos(): array;
 }

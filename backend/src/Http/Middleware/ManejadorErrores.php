@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Core;
+namespace App\Http\Middleware;
 
 use App\Http\Emisor;
 use App\Http\Json;
@@ -14,19 +14,20 @@ use Psr\Http\Message\ResponseInterface;
  */
 final class ManejadorErrores
 {
-    private static bool $registrado = false;
+    private static bool $fatalesRegistrados = false;
     private static bool $emitido = false;
 
     public static function registrar(): void
     {
-        if (self::$registrado) {
-            return;
-        }
-        self::$registrado = true;
+        self::$emitido = false;                      // abre petición, como un proceso fpm limpio
 
         set_error_handler([self::class, 'avisos']);
         set_exception_handler([self::class, 'excepciones']);
-        register_shutdown_function([self::class, 'fatales']);
+
+        if (!self::$fatalesRegistrados) {            // el shutdown sí es único
+            self::$fatalesRegistrados = true;
+            register_shutdown_function([self::class, 'fatales']);
+        }
     }
 
     public static function avisos(int $nivel, string $mensaje, string $archivo, int $linea): bool
@@ -80,5 +81,16 @@ final class ManejadorErrores
             'mensaje' => $excepcion->getMessage(),
             'origen'  => $excepcion->getFile() . ':' . $excepcion->getLine(),
         ]);
+    }
+
+    public static function reset(): void
+    {
+        self::$emitido = false;
+    }
+
+    public static function restaurar(): void
+    {
+        restore_error_handler();
+        restore_exception_handler();
     }
 }

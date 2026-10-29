@@ -28,6 +28,18 @@ final class Router
     }
 
     /** @param array{class-string, string} $manejador */
+    public function put(string $patron, array $manejador): void
+    {
+        $this->agregar('PUT', $patron, $manejador);
+    }
+
+    /** @param array{class-string, string} $manejador */
+    public function delete(string $patron, array $manejador): void
+    {
+        $this->agregar('DELETE', $patron, $manejador);
+    }
+
+    /** @param array{class-string, string} $manejador */
     private function agregar(string $metodo, string $patron, array $manejador): void
     {
         [$controlador, $accion] = $manejador;

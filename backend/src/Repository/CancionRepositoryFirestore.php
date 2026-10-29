@@ -56,4 +56,14 @@ final class CancionRepositoryFirestore implements CancionRepository
 
         $this->coleccion()->document($cancion->id)->set($datos);
     }
+
+    public function eliminar(string $id): void
+    {
+        $this->coleccion()->document($id)->delete();
+    }
+
+    public function nuevoId(): string
+    {
+        return $this->coleccion()->newDocument()->id();
+    }
 }

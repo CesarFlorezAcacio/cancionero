@@ -18,4 +18,9 @@ interface CancionRepository
     public function todas(): array;
 
     public function guardar(Cancion $cancion): void;
+
+    public function eliminar(string $id): void;
+
+    /** El id lo genera la fuente: en Firestore es autogenerado. */
+    public function nuevoId(): string;
 }

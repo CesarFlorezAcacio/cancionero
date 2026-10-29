@@ -15,4 +15,9 @@ final class CancionNoEncontrada extends \RuntimeException implements ErrorHttp
     {
         return 404;
     }
+
+    public function datos(): array
+    {
+        return [];
+    }
 }

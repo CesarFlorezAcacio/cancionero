@@ -33,4 +33,29 @@ final class CancionController
 
         return Json::respuesta(200, ['ok' => true, 'canciones' => $canciones]);
     }
+    
+    /** @param array<string, string> $args */
+    public function crear(ServerRequestInterface $peticion, array $args): ResponseInterface
+    {
+        $cancion = $this->servicio->crear(Json::cuerpo($peticion));
+
+        return Json::respuesta(201, ['ok' => true, 'cancion' => $cancion->aArray()])
+            ->withHeader('Location', '/api/canciones/' . $cancion->id);
+    }
+
+    /** @param array<string, string> $args */
+    public function actualizar(ServerRequestInterface $peticion, array $args): ResponseInterface
+    {
+        $cancion = $this->servicio->actualizar($args['id'], Json::cuerpo($peticion));
+
+        return Json::respuesta(200, ['ok' => true, 'cancion' => $cancion->aArray()]);
+    }
+
+    /** @param array<string, string> $args */
+    public function eliminar(ServerRequestInterface $peticion, array $args): ResponseInterface
+    {
+        $this->servicio->eliminar($args['id']);
+
+        return Json::respuesta(200, ['ok' => true]);
+    }
 }

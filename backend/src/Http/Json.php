@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http;
 
+use App\Excepcion\CuerpoMalFormado;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Stream;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\{ResponseInterface,ServerRequestInterface};
 
 final class Json
 {
@@ -23,5 +24,17 @@ final class Json
             ->createResponse($codigo)
             ->withHeader('Content-Type', 'application/json; charset=utf-8')
             ->withBody(Stream::create($cuerpo));
+    }
+
+    /** @return array<string, mixed> */
+    public static function cuerpo(ServerRequestInterface $peticion): array
+    {
+        $datos = json_decode((string) $peticion->getBody(), true);
+
+        if (!is_array($datos)) {
+            throw new CuerpoMalFormado();
+        }
+
+        return $datos;
     }
 }

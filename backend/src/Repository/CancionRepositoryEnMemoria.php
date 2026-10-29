@@ -11,6 +11,7 @@ final class CancionRepositoryEnMemoria implements CancionRepository
 {
     /** @var array<string, Cancion> */
     private array $canciones;
+    private int $siguiente = 4;
 
     public function __construct()
     {
@@ -44,5 +45,15 @@ final class CancionRepositoryEnMemoria implements CancionRepository
     public function guardar(Cancion $cancion): void
     {
         $this->canciones[$cancion->id] = $cancion;
+    }
+
+    public function eliminar(string $id): void
+    {
+        unset($this->canciones[$id]);
+    }
+
+    public function nuevoId(): string
+    {
+        return (string) $this->siguiente++;
     }
 }
