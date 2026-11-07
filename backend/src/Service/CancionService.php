@@ -7,11 +7,15 @@ namespace App\Service;
 use App\Excepcion\CancionNoEncontrada;
 use App\Model\Cancion;
 use App\Repository\CancionRepository;
+use App\Service\Validacion\ValidadorCancion;
 
 /** Reglas de negocio de canciones. No sabe de HTTP ni de Firestore. */
 final class CancionService
 {
-    public function __construct(private CancionRepository $repositorio)
+    public function __construct(
+        private CancionRepository $repositorio,
+        private ValidadorCancion $validador = new ValidadorCancion()
+    )
     {
     }
 
@@ -23,14 +27,15 @@ final class CancionService
     }
 
     /** @return list<Cancion> */
-    public function listar(): array
+    /*public function listar(): array
     {
         return $this->repositorio->todas();
-    }
+    }*/
 
     /** @param array<string, mixed> $datos */
     public function crear(array $datos): Cancion
     {
+        $datos = $this->validador->validar($datos);
         $cancion = Cancion::desdeArray(['id' => $this->repositorio->nuevoId()] + $datos);
         $this->repositorio->guardar($cancion);
 
@@ -52,5 +57,19 @@ final class CancionService
     {
         $this->obtener($id);
         $this->repositorio->eliminar($id);
+    }
+
+    /** @return array{canciones: list<Cancion>, siguiente: ?string} */
+    public function listar(int $limite = 20, ?string $despuesDe = null): array
+    {
+        $limite    = max(1, min($limite, 100));
+        
+        $canciones = $this->repositorio->pagina($limite + 1, $despuesDe);
+
+        $hayMas    = count($canciones) > $limite;
+        $pagina    = array_slice($canciones, 0, $limite);
+        $siguiente = $hayMas ? $pagina[array_key_last($pagina)]->id : null;
+
+        return ['canciones' => $pagina, 'siguiente' => $siguiente];
     }
 }

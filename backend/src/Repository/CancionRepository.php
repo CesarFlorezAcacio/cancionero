@@ -23,4 +23,9 @@ interface CancionRepository
 
     /** El id lo genera la fuente: en Firestore es autogenerado. */
     public function nuevoId(): string;
+
+    /**
+     * @return list<Cancion>
+     */
+    public function pagina(int $limite, ?string $despuesDe): array;
 }
