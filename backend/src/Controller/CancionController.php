@@ -24,7 +24,7 @@ final class CancionController
     }
 
     /** @param array<string, string> $args */
-    public function listar(ServerRequestInterface $peticion, array $args): ResponseInterface
+    /*public function listar(ServerRequestInterface $peticion, array $args): ResponseInterface
     {
         $canciones = array_map(
             static fn ($cancion): array => $cancion->aArray(),
@@ -32,7 +32,7 @@ final class CancionController
         );
 
         return Json::respuesta(200, ['ok' => true, 'canciones' => $canciones]);
-    }
+    }*/
     
     /** @param array<string, string> $args */
     public function crear(ServerRequestInterface $peticion, array $args): ResponseInterface
@@ -57,5 +57,21 @@ final class CancionController
         $this->servicio->eliminar($args['id']);
 
         return Json::respuesta(200, ['ok' => true]);
+    }
+    
+    /** @param array<string, string> $args */
+    public function listar(ServerRequestInterface $peticion, array $args): ResponseInterface
+    {
+        $parametros = $peticion->getQueryParams();
+        $limite     = (int) ($parametros['limite'] ?? 20);
+        $despuesDe  = isset($parametros['despues']) ? (string) $parametros['despues'] : null;
+        
+        $resultado = $this->servicio->listar($limite, $despuesDe);
+
+        return Json::respuesta(200, [
+            'ok'        => true,
+            'canciones' => array_map(static fn ($c): array => $c->aArray(), $resultado['canciones']),
+            'siguiente' => $resultado['siguiente'],
+        ]);
     }
 }

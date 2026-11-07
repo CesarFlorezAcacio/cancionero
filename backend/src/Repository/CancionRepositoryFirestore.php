@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Model\Cancion;
 use Google\Cloud\Firestore\CollectionReference;
 use Google\Cloud\Firestore\FirestoreClient;
+use Google\Cloud\Firestore\FieldPath;
 
 /**
  * Misma interfaz que la versión en memoria: el servicio no nota la diferencia.
@@ -65,5 +66,26 @@ final class CancionRepositoryFirestore implements CancionRepository
     public function nuevoId(): string
     {
         return $this->coleccion()->newDocument()->id();
+    }
+
+    /**
+     * @return list<Cancion>
+     */
+    public function pagina(int $limite, ?string $despuesDe): array
+    {
+        $consulta = $this->coleccion()
+            ->orderBy(FieldPath::documentId())
+            ->limit($limite);
+
+        if ($despuesDe !== null) {
+            $consulta = $consulta->startAfter($this->coleccion()->document($despuesDe));
+        }
+
+        $canciones = [];
+        foreach ($consulta->documents() as $documento) {
+            $canciones[] = Cancion::desdeArray(['id' => $documento->id()] + $documento->data());
+        }
+
+        return $canciones;
     }
 }

@@ -56,4 +56,23 @@ final class CancionRepositoryEnMemoria implements CancionRepository
     {
         return (string) $this->siguiente++;
     }
+
+    /**
+     * @return list<Cancion>
+     */
+    public function pagina(int $limite, ?string $despuesDe): array
+    {
+        $ids = array_map('strval', array_keys($this->canciones));
+        sort($ids, SORT_STRING);
+        
+        if ($despuesDe !== null) {
+            $posicion = array_search($despuesDe, $ids, true);
+            $ids = $posicion === false ? $ids : array_slice($ids, $posicion + 1);
+        }
+
+        return array_map(
+            fn (string $id): Cancion => $this->canciones[$id],
+            array_slice($ids, 0, $limite),
+        );
+    }
 }
