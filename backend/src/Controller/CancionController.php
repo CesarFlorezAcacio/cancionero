@@ -67,7 +67,7 @@ final class CancionController
         $despuesDe  = isset($parametros['despues']) ? (string) $parametros['despues'] : null;
         
         $resultado = $this->servicio->listar($limite, $despuesDe);
-
+        
         return Json::respuesta(200, [
             'ok'        => true,
             'canciones' => array_map(static fn ($c): array => $c->aArray(), $resultado['canciones']),

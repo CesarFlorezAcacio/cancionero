@@ -17,8 +17,6 @@ build/
 npm-debug.log*
 
 # Volúmenes y dat
-
-backend/config/firebase.jsonos de Docker
 .docker-data/
 backend/config/firebase.json
 
